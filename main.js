@@ -1,4 +1,4 @@
-  document.addEventListener('scroll', () => {
+ document.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
     let lastScroll = 0;
     const currentScroll = window.scrollY;
@@ -225,19 +225,19 @@ class CineStream {
       });
   }
 
-  addToWatchlist(mediaId, mediaType, title) {
-    const item = { id: mediaId, type: mediaType, title };
-    const category = mediaType === 'movie' ? 'movies' : 'series';
+  addToWatchlist(mediaId, mediaType, title, posterPath) {
+  const item = { id: mediaId, type: mediaType, title, poster_path: posterPath };
+  const category = mediaType === 'movie' ? 'movies' : 'series';
 
-    if (!this.state.watchlist[category].some(i => i.id === mediaId)) {
-      this.state.watchlist[category].push(item);
-      localStorage.setItem('watchlist', JSON.stringify(this.state.watchlist));
-      this.showToast(`Added "${title}" to watchlist`, 'success');
-      this.renderWatchlist();
-    } else {
-      this.showToast(`"${title}" is already in your watchlist`, 'info');
-    }
+  if (!this.state.watchlist[category].some(i => i.id === mediaId)) {
+    this.state.watchlist[category].push(item);
+    localStorage.setItem('watchlist', JSON.stringify(this.state.watchlist));
+    this.showToast(`Added "${title}" to watchlist`, 'success');
+    this.renderWatchlist();
+  } else {
+    this.showToast(`"${title}" is already in your watchlist`, 'info');
   }
+}
 
   // Remove from Watchlist
   removeFromWatchlist(mediaId, category) {
@@ -286,37 +286,37 @@ class CineStream {
 
   // Render Watchlist
   renderWatchlist() {
-    const moviesContent = document.getElementById('movies-content');
-    const seriesContent = document.getElementById('series-content');
+  const moviesContent = document.getElementById('movies-content');
+  const seriesContent = document.getElementById('series-content');
 
-    const renderItems = (items, container, category) => {
-      if (items.length === 0) {
-        container.innerHTML = '<p class="text-center">No items in this category.</p>';
-        return;
-      }
-      container.innerHTML = items.map(item => `
-        <div class="watchlist-item">
-          <img src="${this.TMDB_IMAGE_URL}/w92${item.poster_path || '/no-poster.jpg'}" alt="${this.escapeHTML(item.title)}">
-          <div class="watchlist-info">
-            <h4>${this.escapeHTML(item.title)}</h4>
-            <p>${item.type === 'movie' ? 'Movie' : 'Series'}</p>
-          </div>
-          <button class="btn btn-remove" data-id="${item.id}" data-category="${category}">
-            <i class="fas fa-trash"></i>
-          </button>
+  const renderItems = (items, container, category) => {
+    if (items.length === 0) {
+      container.innerHTML = '<p class="text-center">No items in this category.</p>';
+      return;
+    }
+    container.innerHTML = items.map(item => `
+      <div class="watchlist-item">
+        <img src="${this.TMDB_IMAGE_URL}/w92${item.poster_path}" alt="${this.escapeHTML(item.title)}">
+        <div class="watchlist-info">
+          <h4>${this.escapeHTML(item.title)}</h4>
+          <p>${item.type === 'movie' ? 'Movie' : 'Series'}</p>
         </div>
-      `).join('');
+        <button class="btn btn-remove" data-id="${item.id}" data-category="${category}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `).join('');
 
-      container.querySelectorAll('.btn-remove').forEach(btn => {
-        btn.addEventListener('click', () => {
-          this.removeFromWatchlist(btn.dataset.id, btn.dataset.category);
-        });
+    container.querySelectorAll('.btn-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.removeFromWatchlist(btn.dataset.id, btn.dataset.category);
       });
-    };
+    });
+  };
 
-    renderItems(this.state.watchlist.movies, moviesContent, 'movies');
-    renderItems(this.state.watchlist.series, seriesContent, 'series');
-  }
+  renderItems(this.state.watchlist.movies, moviesContent, 'movies');
+  renderItems(this.state.watchlist.series, seriesContent, 'series');
+}
 
   applyTheme(theme) {
     const body = document.body;
@@ -979,231 +979,238 @@ class CineStream {
   }
   
   async renderMediaDetails(mediaType, id) {
-    this.updateActiveNavLink(null);
-    this.state.currentView = 'details';
-    this.state.currentMediaType = mediaType;
-    
-    // Create placeholder for details
-    const placeholderHTML = `
-      <div class="container">
-        <div class="loader my-5"><div class="spinner"></div></div>
-      </div>
-    `;
-    
-    // Set placeholder content
-    if (this.mainContent) {
-      this.mainContent.innerHTML = placeholderHTML;
-      
-      // Fetch media details
-      const data = await this.fetchMediaDetails(mediaType, id);
-      
-      if (data) {
-        this.state.currentMedia = data;
-        
-        // Extract backdrop and poster paths
-        const backdropPath = data.backdrop_path 
-          ? `${this.TMDB_IMAGE_URL}/original${data.backdrop_path}`
-          : null;
-        const posterPath = data.poster_path
-          ? `${this.TMDB_IMAGE_URL}/w500${data.poster_path}`
-          : 'img/no-poster.jpg';
-          data.poster_path = data.poster_path || '/no-poster.jpg';
-        // Extract genres
-        const genres = data.genres.map(genre => genre.name).join(', ');
-        
-        // Extract directors and cast
-        let directors = [];
-        let cast = [];
-        
-        if (data.credits && data.credits.crew) {
-          directors = data.credits.crew
-            .filter(crew => crew.job === 'Director')
-            .map(director => director.name);
-        }
-        
-        if (data.credits && data.credits.cast) {
-          cast = data.credits.cast.slice(0, 8).map(actor => actor.name);
-        }
-        
-        // Prepare trailer
-        let trailerKey = null;
-        if (data.videos && data.videos.results) {
-          const trailer = data.videos.results.find(video => 
-            video.type === 'Trailer' && video.site === 'YouTube'
-          );
-          if (trailer) {
-            trailerKey = trailer.key;
-          }
-        }
-        
-        // Create hero section with backdrop
-        const heroStyle = backdropPath 
-          ? `background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('${backdropPath}');`
-          : 'background-color: #121212;';
-        
-          const heroHTML = `
-     <section class="media-hero" style="${heroStyle}">
+  this.updateActiveNavLink(null);
+  this.state.currentView = 'details';
+  this.state.currentMediaType = mediaType;
+
+  // Create placeholder for details
+  const placeholderHTML = `
     <div class="container">
-      <div class="row py-5">
-        <div class="col-md-4 mb-4">
-          <img src="${posterPath}" alt="${this.escapeHTML(data.title || data.name)}" class="img-fluid rounded shadow">
-        </div>
-        <div class="col-md-8 text-white">
-          <h1>${this.escapeHTML(data.title || data.name)}</h1>
-          <div class="media-meta mb-3">
-            ${mediaType === 'movie' ? `<span>${data.release_date?.substring(0, 4) || 'N/A'}</span>` : `<span>${data.first_air_date?.substring(0, 4) || 'N/A'}</span>`}
-            <span class="mx-2">•</span>
-            <span>${genres || 'N/A'}</span>
-            <span class="mx-2">•</span>
-            <span>${mediaType === 'movie' ? `${data.runtime || 'N/A'} min` : `${data.number_of_seasons || 'N/A'} season${data.number_of_seasons !== 1 ? 's' : ''}`}</span>
-          </div>
-          <div class="rating mb-4">
-            <div class="stars">
-              <i class="fas fa-star"></i>
-              <span>${data.vote_average ? (data.vote_average / 2).toFixed(1) : 'N/A'}/5</span>
+      <div class="loader my-5"><div class="spinner"></div></div>
+    </div>
+  `;
+
+  // Set placeholder content
+  if (this.mainContent) {
+    this.mainContent.innerHTML = placeholderHTML;
+
+    // Fetch media details
+    const data = await this.fetchMediaDetails(mediaType, id);
+
+    if (data) {
+      this.state.currentMedia = data;
+
+      // Extract backdrop and poster paths
+      const backdropPath = data.backdrop_path 
+        ? `${this.TMDB_IMAGE_URL}/original${data.backdrop_path}`
+        : null;
+      const posterPath = data.poster_path
+        ? `${this.TMDB_IMAGE_URL}/w500${data.poster_path}`
+        : 'img/no-poster.jpg';
+      const watchlistPosterPath = data.poster_path || '/no-poster.jpg'; // Store raw path for watchlist
+      data.poster_path = watchlistPosterPath; // Ensure data.poster_path is set
+
+      // Extract genres
+      const genres = data.genres.map(genre => genre.name).join(', ');
+
+      // Extract directors and cast
+      let directors = [];
+      let cast = [];
+
+      if (data.credits && data.credits.crew) {
+        directors = data.credits.crew
+          .filter(crew => crew.job === 'Director')
+          .map(director => director.name);
+      }
+
+      if (data.credits && data.credits.cast) {
+        cast = data.credits.cast.slice(0, 8).map(actor => actor.name);
+      }
+
+      // Prepare trailer
+      let trailerKey = null;
+      if (data.videos && data.videos.results) {
+        const trailer = data.videos.results.find(video => 
+          video.type === 'Trailer' && video.site === 'YouTube'
+        );
+        if (trailer) {
+          trailerKey = trailer.key;
+        }
+      }
+
+      // Create hero section with backdrop
+      const heroStyle = backdropPath 
+        ? `background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('${backdropPath}');`
+        : 'background-color: #121212;';
+
+      const heroHTML = `
+        <section class="media-hero" style="${heroStyle}">
+          <div class="container">
+            <div class="row py-5">
+              <div class="col-md-4 mb-4">
+                <img src="${posterPath}" alt="${this.escapeHTML(data.title || data.name)}" class="img-fluid rounded shadow">
+              </div>
+              <div class="col-md-8 text-white">
+                <h1>${this.escapeHTML(data.title || data.name)}</h1>
+                <div class="media-meta mb-3">
+                  ${mediaType === 'movie' ? `<span>${data.release_date?.substring(0, 4) || 'N/A'}</span>` : `<span>${data.first_air_date?.substring(0, 4) || 'N/A'}</span>`}
+                  <span class="mx-2">•</span>
+                  <span>${genres || 'N/A'}</span>
+                  <span class="mx-2">•</span>
+                  <span>${mediaType === 'movie' ? `${data.runtime || 'N/A'} min` : `${data.number_of_seasons || 'N/A'} season${data.number_of_seasons !== 1 ? 's' : ''}`}</span>
+                </div>
+                <div class="rating mb-4">
+                  <div class="stars">
+                    <i class="fas fa-star"></i>
+                    <span>${data.vote_average ? (data.vote_average / 2).toFixed(1) : 'N/A'}/5</span>
+                  </div>
+                </div>
+                <p class="overview mb-4">${this.escapeHTML(data.overview || 'No overview available.')}</p>
+                ${directors.length > 0 ? `<p><strong>Director${directors.length > 1 ? 's' : ''}:</strong> ${this.escapeHTML(directors.join(', '))}</p>` : ''}
+                ${cast.length > 0 ? `<p><strong>Cast:</strong> ${this.escapeHTML(cast.join(', '))}</p>` : ''}
+                <div class="action-buttons mt-4">
+                  <button class="btn btn-primary btn-lg btn-watch" data-media-id="${data.id}" data-media-type="${mediaType}">
+                    <i class="fas fa-play-circle"></i> Watch Now
+                  </button>
+                  ${trailerKey ? `
+                    <button class="btn btn-outline-light btn-lg ml-3" data-toggle="modal" data-target="#trailerModal">
+                      <i class="fas fa-film"></i> Watch Trailer
+                    </button>
+                  ` : ''}
+                  <button class="btn btn-outline-light btn-lg ml-3 btn-add-watchlist" 
+                    data-media-id="${data.id}" 
+                    data-media-type="${mediaType}" 
+                    data-title="${this.escapeHTML(data.title || data.name)}" 
+                    data-poster-path="${watchlistPosterPath}">
+                    <i class="fas fa-plus"></i> Add to Watchlist
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <p class="overview mb-4">${this.escapeHTML(data.overview || 'No overview available.')}</p>
-          ${directors.length > 0 ? `<p><strong>Director${directors.length > 1 ? 's' : ''}:</strong> ${this.escapeHTML(directors.join(', '))}</p>` : ''}
-          ${cast.length > 0 ? `<p><strong>Cast:</strong> ${this.escapeHTML(cast.join(', '))}</p>` : ''}
-          <div class="action-buttons mt-4">
-            <button class="btn btn-primary btn-lg btn-watch" data-media-id="${data.id}" data-media-type="${mediaType}">
-              <i class="fas fa-play-circle"></i> Watch Now
-            </button>
-            ${trailerKey ? `
-              <button class="btn btn-outline-light btn-lg ml-3" data-toggle="modal" data-target="#trailerModal">
-                <i class="fas fa-film"></i> Watch Trailer
-              </button>
-            ` : ''}
-            <button class="btn btn-outline-light btn-lg ml-3 btn-add-watchlist" data-media-id="${data.id}" data-media-type="${mediaType}" data-title="${this.escapeHTML(data.title || data.name)}">
-              <i class="fas fa-plus"></i> Add to Watchlist
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-`;
-    
-       // Create content section
-       let contentHTML = `
-         <div class="container py-4">
-       `;
-       
-       // Add seasons section for TV shows
-       if (mediaType === 'tv' && data.seasons) {
-         contentHTML += `
-           <section class="seasons-section mb-5">
-             <h2 class="section-title">Seasons</h2>
-             <div class="seasons-accordion" id="accordionSeasons">
-               ${data.seasons.map((season, index) => `
-                 <div class="card season-card">
-                   <div class="card-header" id="heading${season.season_number}">
-                     <h3 class="mb-0">
-                       <button class="btn btn-link${index !== 0 ? ' collapsed' : ''}" type="button" data-toggle="collapse" data-target="#collapse${season.season_number}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="collapse${season.season_number}">
-                         Season ${season.season_number} ${season.name !== `Season ${season.season_number}` ? `- ${this.escapeHTML(season.name)}` : ''}
-                         <span class="season-info ml-2">(${season.episode_count} episodes)</span>
-                       </button>
-                     </h3>
-                   </div>
-                   <div id="collapse${season.season_number}" class="collapse${index === 0 ? ' show' : ''}" aria-labelledby="heading${season.season_number}" data-parent="#accordionSeasons">
-                     <div class="card-body" id="season-${season.season_number}-episodes">
-                       <div class="loader"><div class="spinner"></div></div>
-                     </div>
-                   </div>
-                 </div>
-               `).join('')}
-             </div>
-           </section>
-         `;
-         
-         // Load first season episodes
-         if (data.seasons.length > 0 && data.seasons[0].season_number !== 0) {
-           setTimeout(() => {
-             this.loadSeasonEpisodes(data.id, data.seasons[0].season_number);
-           }, 100);
-         }
-       }
-       
-       // Add similar content section
-       if (data.similar && data.similar.results && data.similar.results.length > 0) {
-         contentHTML += `
-           <section class="similar-section mb-5">
-             <h2 class="section-title">Similar ${mediaType === 'movie' ? 'Movies' : 'TV Shows'}</h2>
-             <div class="row">
-               ${data.similar.results.slice(0, 8).map(item => this.createMediaCard(item, mediaType)).join('')}
-             </div>
-           </section>
-         `;
-       }
-       
-       contentHTML += `
-         </div>
-       `;
-       
-       // Add trailer modal if available
-       if (trailerKey) {
-         contentHTML += `
-           <div class="modal fade" id="trailerModal" tabindex="-1" role="dialog" aria-labelledby="trailerModalLabel" aria-hidden="true">
-             <div class="modal-dialog modal-dialog-centered modal-lg">
-               <div class="modal-content">
-                 <div class="modal-header">
-                   <h5 class="modal-title" id="trailerModalLabel">Trailer: ${this.escapeHTML(data.title || data.name)}</h5>
-                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                     <span aria-hidden="true">&times;</span>
-                   </button>
-                 </div>
-                 <div class="modal-body p-0">
-                   <div class="embed-responsive embed-responsive-16by9">
-                     <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/${trailerKey}" allowfullscreen></iframe>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </div>
-         `;
-       }
-       
-       // Set the full content
-       this.mainContent.innerHTML = heroHTML + contentHTML;
-       
-       // Add event listeners to watch buttons
-       document.querySelectorAll('.btn-watch').forEach(btn => {
-         btn.addEventListener('click', (e) => this.handleWatchClick(e));
-       });
+        </section>
+      `;
 
-       document.querySelectorAll('.btn-add-watchlist').forEach(btn => {
+      // Create content section
+      let contentHTML = `
+        <div class="container py-4">
+      `;
+
+      // Add seasons section for TV shows
+      if (mediaType === 'tv' && data.seasons) {
+        contentHTML += `
+          <section class="seasons-section mb-5">
+            <h2 class="section-title">Seasons</h2>
+            <div class="seasons-accordion" id="accordionSeasons">
+              ${data.seasons.map((season, index) => `
+                <div class="card season-card">
+                  <div class="card-header" id="heading${season.season_number}">
+                    <h3 class="mb-0">
+                      <button class="btn btn-link${index !== 0 ? ' collapsed' : ''}" type="button" data-toggle="collapse" data-target="#collapse${season.season_number}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="collapse${season.season_number}">
+                        Season ${season.season_number} ${season.name !== `Season ${season.season_number}` ? `- ${this.escapeHTML(season.name)}` : ''}
+                        <span class="season-info ml-2">(${season.episode_count} episodes)</span>
+                      </button>
+                    </h3>
+                  </div>
+                  <div id="collapse${season.season_number}" class="collapse${index === 0 ? ' show' : ''}" aria-labelledby="heading${season.season_number}" data-parent="#accordionSeasons">
+                    <div class="card-body" id="season-${season.season_number}-episodes">
+                      <div class="loader"><div class="spinner"></div></div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+        `;
+
+        // Load first season episodes
+        if (data.seasons.length > 0 && data.seasons[0].season_number !== 0) {
+          setTimeout(() => {
+            this.loadSeasonEpisodes(data.id, data.seasons[0].season_number);
+          }, 100);
+        }
+      }
+
+      // Add similar content section
+      if (data.similar && data.similar.results && data.similar.results.length > 0) {
+        contentHTML += `
+          <section class="similar-section mb-5">
+            <h2 class="section-title">Similar ${mediaType === 'movie' ? 'Movies' : 'TV Shows'}</h2>
+            <div class="row">
+              ${data.similar.results.slice(0, 8).map(item => this.createMediaCard(item, mediaType)).join('')}
+            </div>
+          </section>
+        `;
+      }
+
+      contentHTML += `
+        </div>
+      `;
+
+      // Add trailer modal if available
+      if (trailerKey) {
+        contentHTML += `
+          <div class="modal fade" id="trailerModal" tabindex="-1" role="dialog" aria-labelledby="trailerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="trailerModalLabel">Trailer: ${this.escapeHTML(data.title || data.name)}</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </div>
+                <div class="modal-body p-0">
+                  <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/${trailerKey}" allowfullscreen></iframe>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Set the full content
+      this.mainContent.innerHTML = heroHTML + contentHTML;
+
+      // Add event listeners to watch buttons
+      document.querySelectorAll('.btn-watch').forEach(btn => {
+        btn.addEventListener('click', (e) => this.handleWatchClick(e));
+      });
+
+      // Add event listener for Add to Watchlist
+      document.querySelectorAll('.btn-add-watchlist').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          const { mediaId, mediaType, title } = e.target.closest('.btn-add-watchlist').dataset;
-          this.addToWatchlist(mediaId, mediaType, title);
+          const { mediaId, mediaType, title, posterPath } = e.target.closest('.btn-add-watchlist').dataset;
+          this.addToWatchlist(mediaId, mediaType, title, posterPath);
         });
       });
-       
-       // Add event listeners to season headers
-       if (mediaType === 'tv') {
-         document.querySelectorAll('.season-card .btn-link').forEach(btn => {
-           btn.addEventListener('click', (e) => {
-             const seasonNumber = e.target.closest('.card-header').id.replace('heading', '');
-             const collapseElement = document.getElementById(`collapse${seasonNumber}`);
-             
-             if (collapseElement && !collapseElement.classList.contains('loaded')) {
-               collapseElement.classList.add('loaded');
-               this.loadSeasonEpisodes(data.id, seasonNumber);
-             }
-           });
-         });
-       }
-     } else {
-       this.mainContent.innerHTML = `
-         <div class="container">
-           <div class="alert alert-danger my-5">Failed to load details. Please try again later.</div>
-         </div>
-       `;
-     }
-   } else {
-     console.error('Cannot render media details: mainContent element not found');
-   }
- }
+
+      // Add event listeners to season headers
+      if (mediaType === 'tv') {
+        document.querySelectorAll('.season-card .btn-link').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const seasonNumber = e.target.closest('.card-header').id.replace('heading', '');
+            const collapseElement = document.getElementById(`collapse${seasonNumber}`);
+
+            if (collapseElement && !collapseElement.classList.contains('loaded')) {
+              collapseElement.classList.add('loaded');
+              this.loadSeasonEpisodes(data.id, seasonNumber);
+            }
+          });
+        });
+      }
+    } else {
+      this.mainContent.innerHTML = `
+        <div class="container">
+          <div class="alert alert-danger my-5">Failed to load details. Please try again later.</div>
+        </div>
+      `;
+    }
+  } else {
+    console.error('Cannot render media details: mainContent element not found');
+  }
+}
  
  async loadSeasonEpisodes(tvId, seasonNumber) {
    const episodesContainer = document.getElementById(`season-${seasonNumber}-episodes`);
