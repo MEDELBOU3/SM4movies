@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineStream | Movies & TV Shows</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  </head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">CineStream</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" id="home-link">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="movies-link">Movies</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="tv-link">TV Shows</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="trending-link">Trending</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" id="watchlist-link">Watchlist</a>
+        </li>
+        </ul>
+
+        <div class="nav-right">
+            <!-- Theme Switcher -->
+            <div class="theme-selector">
+              <select id="theme-select" class="form-control">
+                <option value="theme-dark">Dark</option>
+                <option value="theme-light">Light</option>
+                <option value="theme-midnight-blue">Midnight Blue</option>
+                <option value="theme-solarized">Solarized</option>
+              </select>
+            </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main id="main-content">
+    <!-- Content will be dynamically loaded here -->
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4 col-md-6">
+          <h3 class="footer-title">About CineStream</h3>
+          <p>CineStream is a streaming platform that provides access to a wide range of movies and TV shows from various sources. Discover the latest releases and classic content all in one place.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-6">
+          <h3 class="footer-title">Explore</h3>
+          <ul class="footer-links list-unstyled">
+            <li><a href="#">Movies</a></li>
+            <li><a href="#">TV Shows</a></li>
+            <li><a href="#">Trending</a></li>
+            <li><a href="#">Top Rated</a></li>
+            <li><a href="#">Upcoming</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-6">
+          <h3 class="footer-title">Information</h3>
+          <ul class="footer-links list-unstyled">
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <h3 class="footer-title">Newsletter</h3>
+          <p>Subscribe to our newsletter for the latest updates on new releases and features.</p>
+          <div class="input-group mb-3">
+            <input type="email" class="form-control" placeholder="Your email address">
+            <button class="btn btn-primary" type="button">Subscribe</button>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 CineStream. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="watchlist-panel" class="watchlist-panel">
+    <div class="watchlist-header">
+      <h2>Watchlist</h2>
+      <button id="close-watchlist" class="btn btn-outline-light btn-sm"><i class="fas fa-times"></i></button>
+    </div>
+    <ul class="nav nav-tabs watchlist-tabs" id="watchlistTabs">
+      <li class="nav-item">
+        <a class="nav-link active" id="movies-tab" data-tab="movies">Movies</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="series-tab" data-tab="series">Series</a>
+      </li>
+    </ul>
+    <div class="watchlist-content" id="watchlist-content">
+      <div id="movies-content" class="tab-pane active"></div>
+      <div id="series-content" class="tab-pane"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="main.js"></script>
+  </body>
+</html>
