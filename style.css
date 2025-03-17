@@ -20,6 +20,7 @@
   --info-color: #17a2b8;
   --warning-color: #ffc107;
   --danger-color: #dc3545;
+  --navbar-bg-color: #1a1a1a;
 }
 
 /* Light Theme */
@@ -242,6 +243,11 @@ a:hover {
   transition: width 0.3s ease, background-color 0.3s ease;
 }
 
+.navbar-collapse {
+  position: relative;
+  z-index: 1040; /* Below toast container */
+}
+
 .navbar.scrolled {
   background-color: rgba(0, 0, 0, 0.95);
 }
@@ -354,6 +360,21 @@ a:hover {
   overflow: hidden;
 }
 
+.hero-bg-container {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1; /* Below content */
+  filter: brightness(0.5) blur(5px);
+  animation: heroBackgroundZoom  20s ease-in-out infinite; /* Zoom animation */
+  filter: brightness(0.5); /* Dim the image to improve text readability */
+}
+
 .hero::before {
   content: '';
   position: absolute;
@@ -361,10 +382,45 @@ a:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(var(--background-color-rgb, 20, 20, 20), 0.6), rgba(var(--background-color-rgb, 20, 20, 20), 0.9));
-  z-index: 1;
+  background: linear-gradient(to bottom, rgba(var(--background-color-rgb), 0.6), rgba(var(--background-color-rgb), 0.9));
+  z-index: 1; /* Overlay to enhance text contrast */
 }
 
+.hero .container {
+  position: relative;
+  z-index: 2; /* Ensure content is above the background */
+}
+
+/* Background Animation (Zoom and Pan) */
+@keyframes heroBackgroundZoom {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.1) translate(-5%, -5%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+@keyframes heroBackgroundPan {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-10%, -10%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero-bg-container {
+    animation: heroBackgroundZoom 15s ease-in-out infinite; /* Faster on mobile */
+    filter: brightness(0.4); /* Slightly dimmer on mobile for better readability */
+  }
+
+  .hero {
+    padding: 60px 0;
+  }
+}
 .hero h1,
 .hero p,
 .search-container {
@@ -761,7 +817,7 @@ a:hover {
 }
 
 .star-rating i {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .rating-value {
@@ -909,7 +965,8 @@ a:hover {
 .player-header {
   position: relative;
   padding: 1.5rem 2rem;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+  margin-top: 30px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
   z-index: 10;
 }
 
@@ -955,6 +1012,15 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 400px; /* Adjust as needed */
+  display: inline-block;
+}
+
+#save-progress{
+  padding: 5px;
+  font-size: 14px;
+  border: none;
+  border-radius: 20px;
+  background-color: var(--primary-color);
   display: inline-block;
 }
 
@@ -1398,10 +1464,91 @@ a:hover {
 
 /* Network Details Page */
 .network-hero {
-  background: linear-gradient(to top, var(--background-color-rgb) , var(--secondary-color));
+  background: linear-gradient(45deg, var(--background-color), var(--secondary-color));
   margin-top: 52px;
   padding: 2rem 0;
   border-bottom: 1px solid #333;
+  position: relative;
+  overflow: hidden;
+  animation: gradientFade 8s ease-in-out infinite;
+}
+
+@keyframes gradientFade {
+  0% {
+    background: linear-gradient(45deg, var(--background-color), var(--secondary-color));
+  }
+  50% {
+    background: linear-gradient(45deg, var(--secondary-color), var(--background-color));
+  }
+  100% {
+    background: linear-gradient(45deg, var(--background-color), var(--secondary-color));
+  }
+}
+
+.network-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Updated SVG with theme-based colors */
+  background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400"%3E%3Ccircle cx="50" cy="50" r="5" fill="%23e50914" fill-opacity="0.3" filter="url(%23glow)" /%3E%3Ccircle cx="150" cy="100" r="1" fill="%23ffc107" fill-opacity="0.4" /%3E%3Ccircle cx="300" cy="80" r="6" fill="%2317a2b8" fill-opacity="0.2" filter="url(%23glow)" /%3E...%3C/svg%3E');
+  background-size: 200%;
+  filter: hue-rotate(0deg); /* Adjust based on theme */
+  opacity: 0.6; /* Slightly more visible */
+  animation: driftParticles 15s ease-in-out infinite; /* Updated animation */
+  animation: driftParticles 15s ease-in-out infinite, pulseParticles 3s ease-in-out infinite;
+}
+
+@keyframes pulseParticles {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+.theme-dark .network-hero::before {
+  filter: hue-rotate(0deg); /* Red tones */
+}
+
+.theme-light .network-hero::before {
+  filter: hue-rotate(180deg); /* Blue tones */
+}
+
+.theme-midnight-blue .network-hero::before {
+  filter: hue-rotate(200deg); /* Teal tones */
+}
+
+.theme-solarized .network-hero::before {
+  filter: hue-rotate(60deg); /* Yellow tones */
+}
+
+/* Particle Float Animation */
+@keyframes driftParticles {
+  0% {
+    background-position: 0 0;
+    opacity: 0.6;
+  }
+  25% {
+    background-position: 50% 20%;
+    opacity: 0.8;
+  }
+  50% {
+    background-position: 100% 0;
+    opacity: 0.4;
+  }
+  75% {
+    background-position: 50% -20%;
+    opacity: 0.7;
+  }
+  100% {
+    background-position: 0 0;
+    opacity: 0.6;
+  }
+}
+
+.network-hero .container {
+  position: relative;
+  z-index: 2;
 }
 
 .network-logo-hero {
@@ -1432,7 +1579,29 @@ a:hover {
   margin-bottom: 1.5rem;
 }
 
+@media (max-width: 576px) {
+  .network-hero {
+    padding: 1.5rem 0;
+  }
 
+  .network-hero h1 {
+    font-size: 2rem;
+  }
+
+  .network-hero p {
+    font-size: 1rem;
+  }
+
+  .network-logo-hero {
+    max-width: 100px;
+  }
+
+  /* Reduce animation intensity on mobile for performance */
+  .network-hero::before {
+    animation-duration: 30s; /* Slower animation on mobile */
+    opacity: 0.3; /* Slightly less visible */
+  }
+}
 
 /* Buttons */
 .btn {
@@ -1461,6 +1630,50 @@ a:hover {
   border-color: var(--text-color);
   color: var(--text-color);
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.region-selector {
+  margin-top: 1rem;
+}
+
+.region-selector label {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.region-selector select {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.region-selector select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Filter and Sort Controls */
+.filter-sort-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sort-select,
+.genre-filter {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.sort-select:focus,
+.genre-filter:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 /* Footer */
@@ -1528,19 +1741,85 @@ footer {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1050;
+  z-index: 1060; /* Above navbar collapse (Bootstrap default backdrop z-index is 1040) */
+  width: 300px;
+  max-width: 90%;
 }
 
 .toast {
-  background-color: var(--surface-color);
+  background-color: var(--surface-color, #333);
   padding: 1rem 1.5rem;
   border-radius: 5px;
   margin-bottom: 1rem;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-body {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toast-message {
+  flex: 1;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.close-toast-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  margin-left: 1rem;
+  transition: color 0.2s ease;
+}
+
+.close-toast-btn:hover,
+.close-toast-btn:focus {
+  color: #ccc;
+  outline: none;
 }
 
 .toast-info {
-  background-color: var(--info-color);
+  background-color: var(--info-color, #17a2b8);
+}
+
+@media (max-width: 576px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: calc(100% - 20px);
+  }
+
+  .toast-body {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-close {
+    width: 0.8em;
+    height: 0.8em;
+  }
+
+  .navbar-collapse {
+    background-color: var(--navbar-bg-color, #1a1a1a);
+    padding: 1rem;
+  }
 }
 
 /* Loader */
