@@ -1,8 +1,15 @@
-    /* Reset and Base */
+  /* Reset and Base */
+    :root {
+  --navbar-height: 60px; /* Adjust based on your navbar height */
+  --primary-color: #007bff;
+  --text-color: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --background-dark: #1a1a1a;
+}
 :root, .theme-dark {
   --primary-color: #e50914; /* Netflix red */
   --primary-hover: #f40612;
-  --secondary-color: #221f1f;
+  --secondary-color: #221f1fe3;
   --background-color: #141414;
   --surface-color: #181818;
   --text-color: #ffffff;
@@ -19,7 +26,7 @@
 .theme-light {
   --primary-color: #d81f26; /* Slightly darker red */
   --primary-hover: #e63946;
-  --secondary-color: #f8f9fa;
+  --secondary-color: #f8f9faea;
   --background-color: #ffffff;
   --surface-color: #f1f3f5;
   --text-color: #212529;
@@ -36,7 +43,7 @@
 .theme-midnight-blue {
   --primary-color: #00adb5; /* Teal accent */
   --primary-hover: #00d4dd;
-  --secondary-color: #1a2639; /* Dark blue-gray */
+  --secondary-color: #1a2639ec; /* Dark blue-gray */
   --background-color: #0d1b2a; /* Deep navy */
   --surface-color: #14213d; /* Slightly lighter navy */
   --text-color: #e0e0e0;
@@ -52,7 +59,7 @@
 .theme-solarized {
   --primary-color: #b58900; /* Solarized yellow */
   --primary-hover: #cb4b16;
-  --secondary-color: #073642; /* Dark teal */
+  --secondary-color: #073642f2; /* Dark teal */
   --background-color: #002b36; /* Dark blue-green */
   --surface-color: #073642;
   --text-color: #93a1a1;
@@ -341,6 +348,7 @@ a:hover {
   background-size: cover;
   background-position: center;
   color: var(--text-color);
+  margin-top: 60px;
   padding: 120px 0;
   position: relative;
   overflow: hidden;
@@ -634,6 +642,23 @@ a:hover {
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 5px;
   margin-bottom: 0.5rem;
+  position: relative;
+}
+
+
+.watchlist-item-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.watchlist-item-link:hover {
+  background-color: rgba(var(--primary-color-rgb, 229, 9, 20), 0.1);
 }
 
 .watchlist-item img {
@@ -649,13 +674,13 @@ a:hover {
 }
 
 .watchlist-item h4 {
-  font-size: 1rem;
+  font-size: 1.5rem;
   margin: 0 0 0.25rem;
   color: var(--text-color);
 }
 
 .watchlist-item p {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -665,6 +690,11 @@ a:hover {
   color: var(--text-color);
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
+  margin-left: 1rem; /* Space from the link */
+}
+
+.watchlist-item-link.active {
+    background-color: rgba(var(--primary-color-rgb, 229, 9, 20), 0.2);
 }
 
 /* Main Content Adjustment */
@@ -723,6 +753,24 @@ a:hover {
   margin-bottom: 1rem;
 }
 
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #ffd700;
+}
+
+.star-rating i {
+  font-size: 1.5rem;
+}
+
+.rating-value {
+  margin-left: 0.5rem;
+  font-size: 1.2rem;
+  color: #ffffff;
+  font-weight: 500;
+}
+
 .stars {
   display: flex;
   align-items: center;
@@ -750,12 +798,31 @@ a:hover {
   margin-bottom: 2rem;
 }
 
-.season-card {
+.seasons-accordion .collapse {
+  transition: height 0.3s ease;
+}
+
+.seasons-accordion .card-header button {
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  background: none;
+  border: none;
+}
+
+.seasons-accordion .card-body {
+  padding: 15px;
+}
+
+.seasons-accordion .card {
+  margin-bottom: 10px;
+  border-radius: 5px;
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 5px;
-  margin-bottom: 0.5rem;
-  overflow: hidden;
+}
+
+.season-card {
+  overflow: visible; /* Ensure content isn’t clipped */
 }
 
 .card-header {
@@ -778,11 +845,14 @@ a:hover {
   font-size: 1.1rem;
   font-weight: normal;
   transition: color 0.3s ease;
+  background: none;
+  border: none;
 }
 
 .card-header .btn-link:hover,
 .card-header .btn-link:focus {
   color: var(--primary-color);
+  outline: none;
 }
 
 .card-header .btn-link::after {
@@ -802,6 +872,7 @@ a:hover {
 
 .season-card .card-body {
   padding: 1rem;
+  background-color: var(--surface-color);
 }
 
 .episode-item {
@@ -829,86 +900,72 @@ a:hover {
 /* Player Page */
 .player-container {
   min-height: 100vh;
-  background: #000;
-  padding: 0;
+  background: var(--background-dark);
   position: relative;
-}
-
-.back-link {
-  position: absolute;
-  background-color: #17a2b8;
-  border-radius: 20px;
-  top: 22%;
-  left: 18px;
-  z-index: 10;
-}
-
-.back-link a {
-  color: var(--text-color);
-  font-size: 1.1rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-}
-
-.back-link a:hover {
-  background: var(--primary-color);
+  padding-top: var(--navbar-height);
   color: var(--text-color);
 }
 
 .player-header {
-  position: absolute;
-  top: 80px;
-  left: 0;
-  width: 100%;
-  padding: 0 20px;
+  position: relative;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
   z-index: 10;
+}
+
+.header-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+  gap: 1rem;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--text-color);
+  text-decoration: none;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.back-button span{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width:  120px; /* Adjust as needed */
+  display: inline-block;
+}
+
+.back-button:hover {
+  transform: translateX(-2px);
 }
 
 .player-title {
-  font-size: 1.8rem;
+  font-size: clamp(1rem, 3vw, 1.5rem);
   font-weight: 700;
-}
-
-.player-controls {
-  display: flex;
-  gap: 1rem;
-  margin-top: 15px;
-}
-
-.player-controls .form-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.player-controls label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.player-controls select {
-  padding: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  font-size: 0.9rem;
+  position: relative;
+  margin-left: 40px;
+  margin-top: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px; /* Adjust as needed */
+  display: inline-block;
 }
 
 .video-container {
+  position: relative;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - var(--navbar-height));
   background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .video-player {
@@ -916,6 +973,64 @@ a:hover {
   height: 100%;
   object-fit: contain;
 }
+
+.error-message {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  text-align: center;
+  z-index: 5;
+}
+
+.player-controls-overlay {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 20;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.control-select {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border: none;
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+.control-select:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+
 
 .pagination {
   display: flex;
@@ -1016,6 +1131,308 @@ a:hover {
     font-size: 1rem;
   }
 }
+
+.continue-watching {
+  padding: 30px 0; /* Increased padding for better spacing */
+  background: linear-gradient(to right bottom, var(--background-color), var(--secondary-color)); /* Subtle gradient background */
+}
+
+.continue-watching-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 1.5rem; /* Increased gap for better separation */
+  padding: 0 10px 1.5rem; /* Added horizontal padding for edge spacing */
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory; /* Snap scrolling for better UX */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.continue-watching-scroll::-webkit-scrollbar {
+  height: 6px; /* Thinner scrollbar for a sleeker look */
+}
+
+.continue-watching-scroll::-webkit-scrollbar-thumb {
+  background: #666; /* Slightly lighter for better contrast */
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.continue-watching-scroll::-webkit-scrollbar-thumb:hover {
+  background: #888; /* Hover effect for scrollbar */
+}
+
+.continue-watching-item {
+  flex: 0 0 auto;
+  width: 280px; /* Slightly smaller for better fit on smaller screens */
+  cursor: pointer;
+  position: relative;
+  scroll-snap-align: start; /* Align items to snap points */
+  transition: transform 0.3s ease; /* Smooth transform for hover */
+}
+
+@media (max-width: 768px) {
+  .continue-watching-item {
+    width: 220px; /* Smaller width for mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .continue-watching-item {
+    width: 180px; /* Even smaller for very small screens */
+  }
+}
+
+.media-card-horizontal {
+  display: flex;
+  align-items: center;
+  background: #282828; /* Slightly lighter background for contrast */
+  border-radius: 10px; /* Softer corners */
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.media-card-horizontal:hover {
+  transform: translateY(-5px); /* More pronounced lift on hover */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); /* Stronger shadow on hover */
+}
+
+.media-card-horizontal:focus-within {
+  outline: 2px solid var(--primary-color); /* Accessibility focus state */
+  outline-offset: 2px;
+}
+
+.media-card-img-wtch {
+  position: relative;
+  width: 90px; /* Slightly larger for better visuals */
+  height: 120px; /* Fixed height for consistency */
+  flex-shrink: 0;
+  overflow: hidden; /* Ensure image doesn't overflow */
+}
+
+.media-card-img-wtch img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Added transform for zoom effect */
+}
+
+.media-card-horizontal:hover .media-card-img-wtch img {
+  opacity: 0.85; /* Subtle dim on hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0; /* Controlled by inline style */
+  height: 3px; /* Thinner progress bar */
+  background: linear-gradient(to right, var(--primary-color), #00c4ff); /* Gradient for a modern look */
+  transition: width 0.5s ease-in-out; /* Smoother width transition */
+  border-radius: 0 2px 2px 0;
+}
+
+/* Play and Remove Overlays */
+.play-overlay,
+.remove-overlay {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8); /* Slightly darker background */
+  border: none;
+  border-radius: 50%;
+  width: 36px; /* Slightly smaller for better proportions */
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem; /* Smaller icons */
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+}
+
+.play-overlay {
+  left: 10px; /* Positioned more to the left */
+}
+
+.remove-overlay {
+  right: 10px; /* Positioned more to the right */
+}
+
+.play-overlay:hover,
+.remove-overlay:hover {
+  transform: translateY(-50%) scale(1.1); /* Slight scale on hover */
+}
+
+.continue-watching-item:hover .play-overlay,
+.continue-watching-item:hover .remove-overlay {
+  opacity: 1;
+}
+
+.play-overlay:focus,
+.remove-overlay:focus {
+  outline: 2px solid var(--primary-color); /* Accessibility focus state */
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.media-card-body {
+  flex-grow: 1;
+  padding: 10px; /* Slightly more padding for breathing room */
+  color: #fff;
+  overflow: hidden;
+}
+
+.media-card-body h5 {
+  margin: 0;
+  font-size: 1rem; /* Slightly larger for readability */
+  font-weight: 600; /* Bolder for emphasis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff; /* Ensure high contrast */
+}
+
+.media-card-body p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #ccc; /* Higher contrast for readability */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Optional: Play icon overlay */
+.media-card-img-wtch::after {
+  display: none; /* Removed to avoid redundancy with play-overlay */
+}
+
+/* Accessibility Improvements */
+.continue-watching-item:focus-within {
+  transform: translateY(-5px); /* Mimic hover effect for keyboard navigation */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.streaming-platforms {
+  padding: 30px 0;
+  margin: 20px auto;
+  background: linear-gradient(to right bottom, var(--background-color), var(--secondary-color));
+}
+
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  padding: 0 10px;
+}
+
+.platform-item {
+  position: relative;
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: #282828;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.platform-logo {
+  width: 80%;
+  height: auto;
+  object-fit: contain;
+  padding: 10px;
+  filter: brightness(0.9);
+  transition: filter 0.3s ease;
+  max-height: 100px; /* Prevent oversized logos */
+}
+
+.platform-item:hover .platform-logo {
+  filter: brightness(1.1);
+}
+
+.platform-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.platform-item:hover .platform-overlay {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .platforms-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .platform-logo {
+    width: 70%;
+  }
+
+  .platform-overlay {
+    font-size: 0.8rem;
+    padding: 6px;
+  }
+}
+
+/* Network Details Page */
+.network-hero {
+  background: linear-gradient(to top, var(--background-color-rgb) , var(--secondary-color));
+  margin-top: 52px;
+  padding: 2rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.network-logo-hero {
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+.network-hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0.5rem auto;
+}
+
+.network-hero p {
+  font-size: 1.1rem;
+  color: #bbb;
+}
+
+.network-movies,
+.network-series {
+  padding: 2rem 0;
+}
+
+.network-movies .section-title,
+.network-series .section-title {
+  margin-bottom: 1.5rem;
+}
+
+
 
 /* Buttons */
 .btn {
