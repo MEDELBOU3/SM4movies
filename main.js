@@ -1,4 +1,4 @@
-   document.addEventListener('scroll', () => {
+ document.addEventListener('scroll', () => {
      const navbar = document.querySelector('.navbar');
      let lastScroll = 0;
      const currentScroll = window.scrollY;
@@ -37,13 +37,14 @@
    }
  });
  // CineStream Class Definition
- class CineStream {
+  class CineStream {
    constructor() {
      // Configuration
      this.TMDB_API_KEY = '431fb541e27bceeb9db2f4cab69b54e1';
      this.TMDB_BASE_URL = 'https://api.themoviedb.org/3';
      this.TMDB_IMAGE_URL = 'https://image.tmdb.org/t/p';
-     
+     this.toastContainer = null;
+
      this.STREAMING_SOURCES = {
       TEST: {
         name: "Test Source",
@@ -112,7 +113,9 @@
       searchQuery: '',
       currentPlayback: null,
       continueWatching: JSON.parse(localStorage.getItem('continueWatching')) || [],
-      currentNetwork: null
+      currentNetwork: null,
+      userRegion: localStorage.getItem('userRegion') || 'US', // Default to US
+      networkCache: {} // Cache for network content
     };
 
  
@@ -125,7 +128,7 @@
  
      // Limit continueWatching to 10 items
     if (this.state.continueWatching.length > 40) {
-      this.state.continueWatching = this.state.continueWatching.slice(0, 10);
+      this.state.continueWatching = this.state.continueWatching.slice(0, 40);
       localStorage.setItem('continueWatching', JSON.stringify(this.state.continueWatching));
     }
 
@@ -173,6 +176,11 @@
      if (!this.homeLink || !this.moviesLink || !this.tvLink || !this.trendingLink) {
        console.warn("Navigation elements missing. Navigation may not work properly.");
      }
+
+      this.toastContainer = document.getElementById('toast-container');
+      if (!this.toastContainer) {
+         console.error('Toast container element not found');
+      }
    }
    
    setupEventListeners() {
@@ -196,6 +204,13 @@
    if (this.tvLink) this.tvLink.addEventListener('click', saveAndNavigate(this.renderTVShowsPage));
    if (this.trendingLink) this.trendingLink.addEventListener('click', saveAndNavigate(this.renderTrendingPage));
  
+   const notificationBtn = document.getElementById('notification-btn');
+    if (notificationBtn) {
+      notificationBtn.addEventListener('click', () => {
+        this.showToast('New notification received!', 'info');
+      });
+    }
+
    if (this.themeSelect) {
      this.themeSelect.value = this.state.currentTheme;
      this.themeSelect.addEventListener('change', (e) => {
@@ -260,6 +275,33 @@
        });
 
  }  
+
+ updateHeroBackground(viewType, data) {
+    const heroBgContainer = document.querySelector('.hero-bg-container');
+    if (!heroBgContainer || !data.length) return;
+
+    // Get a random item from the data to use as the background
+    const randomItem = data[Math.floor(Math.random() * data.length)];
+    const backdropPath = randomItem.backdrop_path;
+
+    if (backdropPath) {
+      const imageUrl = `${this.TMDB_IMAGE_URL}/original${backdropPath}`;
+      heroBgContainer.style.backgroundImage = `url(${imageUrl})`;
+
+      // Preload the image to avoid layout shift
+      const img = new Image();
+      img.src = imageUrl;
+      img.onload = () => {
+        heroBgContainer.style.backgroundImage = `url(${imageUrl})`; // Ensure it applies after loading
+      };
+    } else {
+      // Fallback to a default image if no backdrop is available
+      heroBgContainer.style.backgroundImage = `url('https://via.placeholder.com/1920x1080?text=No+Image')`;
+    }
+
+    // Store the data for the current view to update when tabs change
+    this.state.currentViewData = data;
+  }
  
  
    addToWatchlist(mediaId, mediaType, title, posterPath) {
@@ -395,6 +437,11 @@
       console.error(`Error fetching from TMDB (${url}):`, error);
       return null;
     }
+  }
+
+  async fetchGenres(mediaType) {
+    const data = await this.fetchFromTMDB(`/genre/${mediaType}/list`);
+    return data?.genres || [];
   }
 
    // Fetch trending media (movies and TV shows)
@@ -579,17 +626,18 @@ renderSearchFilters() {
      
      // Create hero section
      const heroHTML = `
-       <section class="hero" style="padding: 80px 0;">
-         <div class="container">
-           <div class="row">
-             <div class="col-lg-8 col-md-10 mx-auto text-center">
-               <h1 style="margin-top: 40px;">Explore Movies</h1>
-               <p>Discover the latest blockbusters, classics, and everything in between.</p>
-             </div>
-           </div>
-         </div>
-       </section>
-     `;
+    <section class="hero" style="padding: 80px 0; position: relative; overflow: hidden;">
+      <div class="hero-bg-container"></div> <!-- Container for animated background -->
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto text-center">
+            <h1 style="margin-top: 40px; position: relative; z-index: 2;">Explore Movies</h1>
+            <p style="position: relative; z-index: 2;">Discover the latest blockbusters, classics, and everything in between.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    `;
      
      // Create tabs and content section
      const contentHTML = `
@@ -644,54 +692,54 @@ renderSearchFilters() {
      } else {
        console.error('Cannot render movies page: mainContent element not found');
      }
+
+       this.loadMovies('popular').then(() => {
+          this.updateHeroBackground('movies', this.state.currentViewData?.results || []);
+      });
    }
    
    async loadMovies(category) {
-     const moviesContent = document.getElementById('movies-content');
-     if (!moviesContent) {
-       console.error('Movies content container not found');
-       return;
-     }
-     
-     moviesContent.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-     
-     let data;
-     switch (category) {
-       case 'top_rated':
-         data = await this.fetchTopRatedMovies(this.state.currentPage);
-         break;
-       case 'upcoming':
-         data = await this.fetchUpcomingMovies(this.state.currentPage);
-         break;
-       case 'popular':
-       default:
-         data = await this.fetchPopularMovies(this.state.currentPage);
-         break;
-     }
-     
-     if (data && data.results) {
-       // Update total pages
-       this.state.totalPages = data.total_pages > 500 ? 500 : data.total_pages;
-       
-       // Render movies
-       const moviesHTML = `
-         <div class="row">
-           ${data.results.map(movie => this.createMediaCard(movie, 'movie')).join('')}
-         </div>
-       `;
-       moviesContent.innerHTML = moviesHTML;
-       
-       // Add event listeners to watch buttons
-       document.querySelectorAll('.btn-watch').forEach(btn => {
-         btn.addEventListener('click', (e) => this.handleWatchClick(e));
-       });
-       
-       // Update pagination
-       this.renderPagination('movies-pagination', () => this.loadMovies(category));
-     } else {
-       moviesContent.innerHTML = '<div class="alert alert-danger">Failed to load movies. Please try again later.</div>';
-     }
-   }
+    const moviesContent = document.getElementById('movies-content');
+    if (!moviesContent) {
+      console.error('Movies content container not found');
+      return;
+    }
+
+    moviesContent.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+
+    let data;
+    switch (category) {
+      case 'top_rated':
+        data = await this.fetchTopRatedMovies(this.state.currentPage);
+        break;
+      case 'upcoming':
+        data = await this.fetchUpcomingMovies(this.state.currentPage);
+        break;
+      case 'popular':
+      default:
+        data = await this.fetchPopularMovies(this.state.currentPage);
+        break;
+    }
+
+    if (data && data.results) {
+      this.state.totalPages = data.total_pages > 500 ? 500 : data.total_pages;
+      const moviesHTML = `
+        <div class="row">
+          ${data.results.map(movie => this.createMediaCard(movie, 'movie')).join('')}
+        </div>
+      `;
+      moviesContent.innerHTML = moviesHTML;
+
+      document.querySelectorAll('.btn-watch').forEach(btn => {
+        btn.addEventListener('click', (e) => this.handleWatchClick(e));
+      });
+
+      this.renderPagination('movies-pagination', () => this.loadMovies(category));
+      this.updateHeroBackground('movies', data.results); // Update background
+    } else {
+      moviesContent.innerHTML = '<div class="alert alert-danger">Failed to load movies. Please try again later.</div>';
+    }
+  }
    
    renderTVShowsPage() {
      this.updateActiveNavLink('tv-link');
@@ -700,17 +748,18 @@ renderSearchFilters() {
      
      // Create hero section
      const heroHTML = `
-       <section class="hero" style="padding: 80px 0;">
-         <div class="container">
-           <div class="row">
-             <div class="col-lg-8 col-md-10 mx-auto text-center">
-               <h1 style="margin-top: 40px;">Explore TV Shows</h1>
-               <p>Discover popular series, new episodes, and binge-worthy content.</p>
-             </div>
-           </div>
-         </div>
-       </section>
-     `;
+    <section class="hero" style="padding: 80px 0; position: relative; overflow: hidden;">
+      <div class="hero-bg-container"></div> <!-- Container for animated background -->
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto text-center">
+            <h1 style="margin-top: 40px; position: relative; z-index: 2;">Explore TV Shows</h1>
+            <p style="position: relative; z-index: 2;">Discover popular series, new episodes, and binge-worthy content.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    `;
      
      // Create tabs and content section
      const contentHTML = `
@@ -765,54 +814,54 @@ renderSearchFilters() {
      } else {
        console.error('Cannot render TV shows page: mainContent element not found');
      }
+
+      this.loadTVShows('popular').then(() => {
+        this.updateHeroBackground('tv', this.state.currentViewData?.results || []);
+      });
    }
    
    async loadTVShows(category) {
-     const tvContent = document.getElementById('tv-content');
-     if (!tvContent) {
-       console.error('TV content container not found');
-       return;
-     }
-     
-     tvContent.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-     
-     let data;
-     switch (category) {
-       case 'top_rated':
-         data = await this.fetchTopRatedTVShows(this.state.currentPage);
-         break;
-       case 'airing_today':
-         data = await this.fetchTVAiringToday(this.state.currentPage);
-         break;
-       case 'popular':
-       default:
-         data = await this.fetchPopularTVShows(this.state.currentPage);
-         break;
-     }
-     
-     if (data && data.results) {
-       // Update total pages
-       this.state.totalPages = data.total_pages > 500 ? 500 : data.total_pages;
-       
-       // Render TV shows
-       const tvShowsHTML = `
-         <div class="row">
-           ${data.results.map(show => this.createMediaCard(show, 'tv')).join('')}
-         </div>
-       `;
-       tvContent.innerHTML = tvShowsHTML;
-       
-       // Add event listeners to watch buttons
-       document.querySelectorAll('.btn-watch').forEach(btn => {
-         btn.addEventListener('click', (e) => this.handleWatchClick(e));
-       });
-       
-       // Update pagination
-       this.renderPagination('tv-pagination', () => this.loadTVShows(category));
-     } else {
-       tvContent.innerHTML = '<div class="alert alert-danger">Failed to load TV shows. Please try again later.</div>';
-     }
-   }
+    const tvContent = document.getElementById('tv-content');
+    if (!tvContent) {
+      console.error('TV content container not found');
+      return;
+    }
+
+    tvContent.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+
+    let data;
+    switch (category) {
+      case 'top_rated':
+        data = await this.fetchTopRatedTVShows(this.state.currentPage);
+        break;
+      case 'airing_today':
+        data = await this.fetchTVAiringToday(this.state.currentPage);
+        break;
+      case 'popular':
+      default:
+        data = await this.fetchPopularTVShows(this.state.currentPage);
+        break;
+    }
+
+    if (data && data.results) {
+      this.state.totalPages = data.total_pages > 500 ? 500 : data.total_pages;
+      const tvShowsHTML = `
+        <div class="row">
+          ${data.results.map(show => this.createMediaCard(show, 'tv')).join('')}
+        </div>
+      `;
+      tvContent.innerHTML = tvShowsHTML;
+
+      document.querySelectorAll('.btn-watch').forEach(btn => {
+        btn.addEventListener('click', (e) => this.handleWatchClick(e));
+      });
+
+      this.renderPagination('tv-pagination', () => this.loadTVShows(category));
+      this.updateHeroBackground('tv', data.results); // Update background
+    } else {
+      tvContent.innerHTML = '<div class="alert alert-danger">Failed to load TV shows. Please try again later.</div>';
+    }
+  }
    
    renderTrendingPage() {
      this.updateActiveNavLink('trending-link');
@@ -821,17 +870,18 @@ renderSearchFilters() {
      
      // Create hero section
      const heroHTML = `
-       <section class="hero" style="padding: 80px 0;">
-         <div class="container">
-           <div class="row">
-             <div class="col-lg-8 col-md-10 mx-auto text-center">
-               <h1 style="margin-top: 40px;">Trending Content</h1>
-               <p>See what everyone is watching right now.</p>
-             </div>
-           </div>
-         </div>
-       </section>
-     `;
+    <section class="hero" style="padding: 80px 0; position: relative; overflow: hidden;">
+      <div class="hero-bg-container"></div> <!-- Container for animated background -->
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto text-center">
+            <h1 style="margin-top: 40px; position: relative; z-index: 2;">Trending Content</h1>
+            <p style="position: relative; z-index: 2;">See what everyone is watching right now.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    `;
      
      // Create tabs and content section
      const contentHTML = `
@@ -917,42 +967,43 @@ renderSearchFilters() {
      } else {
        console.error('Cannot render trending page: mainContent element not found');
      }
+
+      this.loadTrending('all', 'week').then(() => {
+         this.updateHeroBackground('trending', this.state.currentViewData?.results || []);
+       });
    }
    
    async loadTrending(mediaType = 'all', timeWindow = 'week') {
-     const trendingContent = document.getElementById('trending-content');
-     if (!trendingContent) {
-       console.error('Trending content container not found');
-       return;
-     }
-     
-     trendingContent.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-     
-     const data = await this.fetchTrending(mediaType, timeWindow, this.state.currentPage);
-     
-     if (data && data.results) {
-       // Update total pages
-       this.state.totalPages = data.total_pages > 500 ? 500 : data.total_pages;
-       
-       // Render trending content
-       const trendingHTML = `
-         <div class="row">
-           ${data.results.map(item => this.createMediaCard(item, item.media_type || (item.title ? 'movie' : 'tv'))).join('')}
-         </div>
-       `;
-       trendingContent.innerHTML = trendingHTML;
-       
-       // Add event listeners to watch buttons
-       document.querySelectorAll('.btn-watch').forEach(btn => {
-         btn.addEventListener('click', (e) => this.handleWatchClick(e));
-       });
-       
-       // Update pagination
-       this.renderPagination('trending-pagination', () => this.loadTrending(mediaType, timeWindow));
-     } else {
-       trendingContent.innerHTML = '<div class="alert alert-danger">Failed to load trending content. Please try again later.</div>';
-     }
-   }
+    const trendingContent = document.getElementById('trending-content');
+    if (!trendingContent) {
+      console.error('Trending content container not found');
+      return;
+    }
+
+    trendingContent.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+
+    const data = await this.fetchTrending(mediaType, timeWindow, this.state.currentPage);
+
+    if (data && data.results) {
+      this.state.totalPages = data.total_pages > 500 ? 500 : data.total_pages;
+      const trendingHTML = `
+        <div class="row">
+          ${data.results.map(item => this.createMediaCard(item, item.media_type || (item.title ? 'movie' : 'tv'))).join('')}
+        </div>
+      `;
+      trendingContent.innerHTML = trendingHTML;
+
+      document.querySelectorAll('.btn-watch').forEach(btn => {
+        btn.addEventListener('click', (e) => this.handleWatchClick(e));
+      });
+
+      this.renderPagination('trending-pagination', () => this.loadTrending(mediaType, timeWindow));
+      this.updateHeroBackground('trending', data.results); // Update background
+    } else {
+      trendingContent.innerHTML = '<div class="alert alert-danger">Failed to load trending content. Please try again later.</div>';
+    }
+  }
+
    
    async renderSearchResults(query) {
      this.updateActiveNavLink(null);
@@ -1725,97 +1776,257 @@ renderSearchFilters() {
   }
 
   async renderNetworkDetails(networkId, networkName) {
-  this.updateActiveNavLink(null);
-  this.state.currentView = 'network-details';
-  this.state.currentNetwork = { id: networkId, name: networkName };
+    this.updateActiveNavLink(null);
+    this.state.currentView = 'network-details';
+    this.state.currentNetwork = { id: networkId, name: networkName };
 
-  const placeholderHTML = `
-    <div class="container">
-      <div class="loader my-5"><div class="spinner"></div></div>
-    </div>
-  `;
+    const placeholderHTML = `
+      <div class="container">
+        <div class="loader my-5"><div class="spinner"></div></div>
+      </div>
+    `;
 
-  if (this.mainContent) {
+    if (!this.mainContent) {
+      console.error('Cannot render network details: mainContent element not found');
+      return;
+    }
+
     this.mainContent.innerHTML = placeholderHTML;
 
-    const movies = await this.fetchFromTMDB('/discover/movie', { with_networks: networkId, sort_by: 'popularity.desc', region: 'US' });
-    const series = await this.fetchFromTMDB('/discover/tv', { with_networks: networkId, sort_by: 'popularity.desc', region: 'US' });
+    // Check cache first
+    const cacheKey = `${networkId}-${this.state.userRegion}`;
+    if (this.state.networkCache[cacheKey]) {
+      console.log(`Using cached data for ${networkName}`);
+      const { movies, series } = this.state.networkCache[cacheKey];
+      this.renderNetworkContent(networkId, networkName, movies, series);
+      return;
+    }
 
-    if (movies && series) {
-      const networkLogo = this.streamingNetworks.find(n => n.id == networkId)?.logo || '';
-      const heroHTML = `
-        <section class="network-hero">
-          <div class="container">
-            <div class="row align-items-center py-5">
-              <div class="col-md-2">
-                <img src="${networkLogo}" alt="${networkName} logo" class="network-logo-hero">
-              </div>
-              <div class="col-md-10">
-                <h1 class="text-white">${this.escapeHTML(networkName)}</h1>
-                <p class="text-secondary">Explore movies and series available on ${this.escapeHTML(networkName)}.</p>
+    // Fetch movies and series
+    const movies = await this.fetchFromTMDB('/discover/movie', {
+      with_networks: networkId,
+      sort_by: 'popularity.desc',
+      region: this.state.userRegion
+    });
+
+    const series = await this.fetchFromTMDB('/discover/tv', {
+      with_networks: networkId,
+      sort_by: 'popularity.desc',
+      region: this.state.userRegion
+    });
+
+    if (!movies || !series) {
+      this.mainContent.innerHTML = `
+        <div class="container">
+          <div class="alert alert-danger my-5">Failed to load content for ${this.escapeHTML(networkName)}. Please check your internet connection and try again.</div>
+        </div>
+      `;
+      return;
+    }
+
+    // Filter content using watch/providers for accuracy
+    const filteredMovies = await this.filterByProvider(movies.results || [], networkId);
+    const filteredSeries = await this.filterByProvider(series.results || [], networkId, 'tv');
+
+    // Fallback to unfiltered results if filtered results are empty
+    const finalMovies = filteredMovies.length > 0 ? filteredMovies : (movies.results || []).slice(0, 8);
+    const finalSeries = filteredSeries.length > 0 ? filteredSeries : (series.results || []).slice(0, 8);
+
+    // Cache the results
+    this.state.networkCache[cacheKey] = { movies: finalMovies, series: finalSeries };
+
+    this.renderNetworkContent(networkId, networkName, finalMovies, finalSeries);
+  }
+
+  async filterByProvider(items, networkId, mediaType = 'movie') {
+    if (!items || items.length === 0) return [];
+
+    const providerPromises = items.map(item =>
+      this.fetchFromTMDB(`/${mediaType}/${item.id}/watch/providers`, { region: this.state.userRegion })
+        .then(data => ({
+          id: item.id,
+          providers: data?.results?.[this.state.userRegion]?.flatrate || []
+        }))
+        .catch(error => {
+          console.warn(`Failed to fetch providers for ${mediaType} ID ${item.id}:`, error);
+          return { id: item.id, providers: [] };
+        })
+    );
+
+    const providerResults = await Promise.all(providerPromises);
+
+    return items.filter(item => {
+      const providerData = providerResults.find(p => p.id === item.id);
+      const providers = providerData.providers;
+      return providers.some(p => p.provider_id == networkId);
+    }).slice(0, 8);
+  }
+
+  async renderNetworkContent(networkId, networkName, movies, series) {
+    const networkLogo = this.streamingNetworks.find(n => n.id == networkId)?.logo || '';
+
+    // Fetch genres for filtering options
+    const movieGenres = await this.fetchGenres('movie');
+    const tvGenres = await this.fetchGenres('tv');
+
+    const heroHTML = `
+      <section class="network-hero">
+        <div class="container">
+          <div class="row align-items-center py-5">
+            <div class="col-md-2">
+              <img src="${networkLogo}" alt="${networkName} logo" class="network-logo-hero">
+            </div>
+            <div class="col-md-10">
+              <h1 class="text-white">${this.escapeHTML(networkName)}</h1>
+              <p class="text-secondary">Explore movies and series available on ${this.escapeHTML(networkName)} in ${this.state.userRegion}.</p>
+              <div class="region-selector mb-3">
+                <label for="region-select" class="text-white mr-2">Region:</label>
+                <select id="region-select" class="form-control d-inline-block w-auto">
+                  <option value="US" ${this.state.userRegion === 'US' ? 'selected' : ''}>United States</option>
+                  <option value="GB" ${this.state.userRegion === 'GB' ? 'selected' : ''}>United Kingdom</option>
+                  <option value="CA" ${this.state.userRegion === 'CA' ? 'selected' : ''}>Canada</option>
+                  <option value="AU" ${this.state.userRegion === 'AU' ? 'selected' : ''}>Australia</option>
+                  <!-- Add more regions as needed -->
+                </select>
               </div>
             </div>
           </div>
-        </section>
-      `;
+        </div>
+      </section>
+    `;
 
-      const contentHTML = `
-        <div class="container py-4">
-          ${movies.results?.length > 0 ? `
-            <section class="network-movies mb-5">
+    const contentHTML = `
+      <div class="container py-4">
+        ${movies.length > 0 ? `
+          <section class="network-movies mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="section-title">Movies on ${this.escapeHTML(networkName)}</h2>
-              <div class="row">
-                ${movies.results.slice(0, 8).map(item => this.createMediaCard(item, 'movie')).join('')}
+              <div class="filter-sort-controls">
+                <select class="sort-select form-control d-inline-block w-auto mr-2" data-type="movie">
+                  <option value="popularity.desc">Sort by: Popularity</option>
+                  <option value="release_date.desc">Sort by: Release Date (Newest)</option>
+                  <option value="vote_average.desc">Sort by: Rating</option>
+                </select>
+                <select class="genre-filter form-control d-inline-block w-auto" data-type="movie">
+                  <option value="">Filter by Genre</option>
+                  ${movieGenres.map(genre => `<option value="${genre.id}">${genre.name}</option>`).join('')}
+                </select>
               </div>
-            </section>
-          ` : `
-            <section class="network-movies mb-5">
-              <p>No movies available from ${this.escapeHTML(networkName)} at this time. This may be due to limited data or regional restrictions. Try another network.</p>
-            </section>
-          `}
-          ${series.results?.length > 0 ? `
-            <section class="network-series mb-5">
+            </div>
+            <div class="row" id="network-movies-list">
+              ${movies.map(item => this.createMediaCard(item, 'movie')).join('')}
+            </div>
+          </section>
+        ` : `
+          <section class="network-movies mb-5">
+            <p>No movies available from ${this.escapeHTML(networkName)} in your region (${this.state.userRegion}). Availability may vary due to licensing or data limitations. Try changing your region or exploring another network.</p>
+          </section>
+        `}
+        ${series.length > 0 ? `
+          <section class="network-series mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="section-title">Series on ${this.escapeHTML(networkName)}</h2>
-              <div class="row">
-                ${series.results.slice(0, 8).map(item => this.createMediaCard(item, 'tv')).join('')}
+              <div class="filter-sort-controls">
+                <select class="sort-select form-control d-inline-block w-auto mr-2" data-type="tv">
+                  <option value="popularity.desc">Sort by: Popularity</option>
+                  <option value="first_air_date.desc">Sort by: Release Date (Newest)</option>
+                  <option value="vote_average.desc">Sort by: Rating</option>
+                </select>
+                <select class="genre-filter form-control d-inline-block w-auto" data-type="tv">
+                  <option value="">Filter by Genre</option>
+                  ${tvGenres.map(genre => `<option value="${genre.id}">${genre.name}</option>`).join('')}
+                </select>
               </div>
-            </section>
-          ` : `
-            <section class="network-series mb-5">
-              <p>No series available from ${this.escapeHTML(networkName)} at this time. This may be due to limited data or regional restrictions. Try another network.</p>
-            </section>
-          `}
-        </div>
-      `;
+            </div>
+            <div class="row" id="network-series-list">
+              ${series.map(item => this.createMediaCard(item, 'tv')).join('')}
+            </div>
+          </section>
+        ` : `
+          <section class="network-series mb-5">
+            <p>No series available from ${this.escapeHTML(networkName)} in your region (${this.state.userRegion}). Availability may vary due to licensing or data limitations. Try changing your region or exploring another network.</p>
+          </section>
+        `}
+      </div>
+    `;
 
-      this.mainContent.innerHTML = heroHTML + contentHTML;
+    this.mainContent.innerHTML = heroHTML + contentHTML;
 
-      document.querySelectorAll('.btn-watch').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const { mediaId, mediaType } = e.target.closest('.btn-watch').dataset;
-          this.handleWatchClick({ target: e.target.closest('.btn-watch'), mediaId, mediaType });
-        });
+    // Event listeners for region selection
+    const regionSelect = document.getElementById('region-select');
+    if (regionSelect) {
+      regionSelect.addEventListener('change', (e) => {
+        this.state.userRegion = e.target.value;
+        localStorage.setItem('userRegion', this.state.userRegion);
+        delete this.state.networkCache[cacheKey]; // Clear cache for this network
+        this.renderNetworkDetails(networkId, networkName);
       });
-
-      document.querySelectorAll('.btn-details').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const { mediaId, mediaType } = e.target.closest('.btn-details').dataset;
-          this.renderMediaDetails(mediaType, mediaId);
-        });
-      });
-    } else {
-      this.mainContent.innerHTML = `
-        <div class="container">
-          <div class="alert alert-danger my-5">Failed to load content for ${this.escapeHTML(networkName)}. Please try again later or check your internet connection.</div>
-        </div>
-      `;
     }
-  } else {
-    console.error('Cannot render network details: mainContent element not found');
+
+    // Event listeners for sorting and filtering
+    document.querySelectorAll('.sort-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const mediaType = e.target.dataset.type;
+        const sortBy = e.target.value;
+        const listElement = document.getElementById(`network-${mediaType}s-list`);
+        const items = mediaType === 'movie' ? movies : series;
+        const sortedItems = await this.sortItems(items, sortBy, mediaType);
+        listElement.innerHTML = sortedItems.map(item => this.createMediaCard(item, mediaType)).join('');
+        this.addMediaCardEventListeners();
+      });
+    });
+
+    document.querySelectorAll('.genre-filter').forEach(select => {
+      select.addEventListener('change', (e) => {
+        const mediaType = e.target.dataset.type;
+        const genreId = e.target.value;
+        const listElement = document.getElementById(`network-${mediaType}s-list`);
+        const items = mediaType === 'movie' ? movies : series;
+        const filteredItems = genreId ? items.filter(item => item.genre_ids.includes(parseInt(genreId))) : items;
+        listElement.innerHTML = filteredItems.map(item => this.createMediaCard(item, mediaType)).join('');
+        this.addMediaCardEventListeners();
+      });
+    });
+
+    this.addMediaCardEventListeners();
   }
-}
+
+  async sortItems(items, sortBy, mediaType) {
+    const sortedItems = [...items];
+    switch (sortBy) {
+      case 'popularity.desc':
+        return sortedItems.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      case 'release_date.desc':
+      case 'first_air_date.desc':
+        return sortedItems.sort((a, b) => {
+          const dateA = new Date(mediaType === 'movie' ? a.release_date : a.first_air_date);
+          const dateB = new Date(mediaType === 'movie' ? b.release_date : b.first_air_date);
+          return dateB - dateA;
+        });
+      case 'vote_average.desc':
+        return sortedItems.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+      default:
+        return sortedItems;
+    }
+  }
+
+  addMediaCardEventListeners() {
+    document.querySelectorAll('.btn-watch').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const { mediaId, mediaType } = e.target.closest('.btn-watch').dataset;
+        this.handleWatchClick({ target: e.target.closest('.btn-watch'), mediaId, mediaType });
+      });
+    });
+
+    document.querySelectorAll('.btn-details').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const { mediaId, mediaType } = e.target.closest('.btn-details').dataset;
+        this.renderMediaDetails(mediaType, mediaId);
+      });
+    });
+  }
 
  
   removeContinueWatchingItem(id, mediaType, season, episode) {
@@ -2080,29 +2291,39 @@ resumePlayback(mediaType, id, title, season, episode) {
  }
  
  showToast(message, type = 'info') {
-  const toastContainer = document.getElementById('toast-container');
-  
-  // Create toast container if it doesn't exist
-  if (!toastContainer) {
-    const newToastContainer = document.createElement('div');
-    newToastContainer.id = 'toast-container';
-    document.body.appendChild(newToastContainer);
+    if (!this.toastContainer) return;
+
+    const toastId = `toast-${Date.now()}`; // Unique ID
+    const toastHTML = `
+      <div class="toast toast-${type}" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+          <span class="toast-message">${this.escapeHTML(message)}</span>
+          <button type="button" class="close-toast-btn" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+    const toastElement = document.getElementById(toastId);
+    toastElement.classList.add('show');
+
+    const closeBtn = toastElement.querySelector('.close-toast-btn');
+    if (closeBtn) {
+      const closeHandler = (e) => {
+        e.stopPropagation(); // Prevent navbar collapse interference
+        toastElement.classList.remove('show');
+        setTimeout(() => toastElement.remove(), 300); // Match CSS transition
+      };
+      closeBtn.addEventListener('click', closeHandler);
+      closeBtn.addEventListener('touchstart', closeHandler); // Mobile support
+    }
+
+    // Auto-hide after 5 seconds
+    setTimeout(closeHandler, 5000);
   }
-  
-  // Create toast element
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.innerText = message;
-  
-  // Add toast to container
-  document.getElementById('toast-container').appendChild(toast);
-  
-  // Remove toast after animation
-  setTimeout(() => {
-    toast.classList.add('toast-hide');
-    setTimeout(() => toast.remove(), 500);
-  }, 3000);
- }
  
  escapeHTML(text) {
   if (!text) return '';
