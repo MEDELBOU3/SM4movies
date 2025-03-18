@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
   <link rel="stylesheet" href="lading-page.css">
-  </head>
+</head>
 <body>
   <!-- Preloader -->
   <div id="preloader">
@@ -81,7 +81,8 @@
       <h2 class="section-title text-center mb-5">Explore by Category</h2>
       <div class="row row-cols-1 row-cols-md-3 g-4">
         <div class="col">
-          <div class="card category-card text-center">
+          <div class="card category-card tilt" data-tilt style="background-image: url('https://image.tmdb.org/t/p/w500/8Vt6m1yJCq5oR3o5D2D2M3Nl61.jpg');">
+            <div class="card-overlay"></div>
             <div class="card-body">
               <i class="fas fa-film fa-3x mb-3 text-primary"></i>
               <h3 class="card-title">Action</h3>
@@ -90,7 +91,8 @@
           </div>
         </div>
         <div class="col">
-          <div class="card category-card text-center">
+          <div class="card category-card tilt" data-tilt style="background-image: url('https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg');">
+            <div class="card-overlay"></div>
             <div class="card-body">
               <i class="fas fa-theater-masks fa-3x mb-3 text-success"></i>
               <h3 class="card-title">Drama</h3>
@@ -99,7 +101,8 @@
           </div>
         </div>
         <div class="col">
-          <div class="card category-card text-center">
+          <div class="card category-card tilt" data-tilt style="background-image: url('https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvift6kCfBn.jpg');">
+            <div class="card-overlay"></div>
             <div class="card-body">
               <i class="fas fa-star fa-3x mb-3 text-warning"></i>
               <h3 class="card-title">Classics</h3>
@@ -156,29 +159,29 @@
   <section class="gallery py-5" id="gallery">
     <div class="container">
       <h2 class="section-title text-center mb-5">Discover CineStream App</h2>
-      <div class="gallery-grid">
-        <div class="gallery-item">
-          <a href="https://via.placeholder.com/1200x800?text=App+Home+Screen" data-lightbox="gallery" data-title="Home Screen">
+      <div class="gallery-carousel owl-carousel">
+        <div class="gallery-item tilt" data-tilt>
+          <a href="screenshoots/home.png" data-lightbox="gallery" data-title="Home Screen">
             <img src="screenshoots/home.png" alt="App Home Screen" loading="lazy">
           </a>
         </div>
-        <div class="gallery-item">
-          <a href="https://via.placeholder.com/1200x800?text=Movie+Details" data-lightbox="gallery" data-title="Movies Page">
+        <div class="gallery-item tilt" data-tilt>
+          <a href="screenshoots/Moviespage.png" data-lightbox="gallery" data-title="Movies Page">
             <img src="screenshoots/Moviespage.png" alt="Movie Details" loading="lazy">
           </a>
         </div>
-        <div class="gallery-item">
-          <a href="https://via.placeholder.com/1200x800?text=Search+Screen" data-lightbox="gallery" data-title="Network details">
+        <div class="gallery-item tilt" data-tilt>
+          <a href="screenshoots/Network-details.png" data-lightbox="gallery" data-title="Network Details">
             <img src="screenshoots/Network-details.png" alt="Search Screen" loading="lazy">
           </a>
         </div>
-        <div class="gallery-item">
-          <a href="https://via.placeholder.com/1200x800?text=Profile+Screen" data-lightbox="gallery" data-title="Movies and TV shows details">
+        <div class="gallery-item tilt" data-tilt>
+          <a href="screenshoots/home.png" data-lightbox="gallery" data-title="Movies and TV Shows Details">
             <img src="screenshoots/home.png" alt="Profile Screen" loading="lazy">
           </a>
         </div>
-        <div class="gallery-item">
-          <a href="https://via.placeholder.com/1200x800?text=Watchlist" data-lightbox="gallery" data-title="Watchlist">
+        <div class="gallery-item tilt" data-tilt>
+          <a href="screenshoots/watchlist.png" data-lightbox="gallery" data-title="Watchlist">
             <img src="screenshoots/watchlist.png" alt="Watchlist" loading="lazy">
           </a>
         </div>
@@ -192,24 +195,33 @@
       <h2 class="section-title text-center mb-5">Why Choose CineStream?</h2>
       <div class="row row-cols-1 row-cols-md-3 g-4">
         <div class="col">
-          <div class="feature-card text-center">
-            <i class="fas fa-tv fa-3x mb-3 text-primary"></i>
-            <h3>Stream Anywhere</h3>
-            <p>Watch on any device, anytime, with seamless quality.</p>
+          <div class="feature-card tilt" data-tilt style="background-image: url('https://image.tmdb.org/t/p/w500/5weFjIpK1g8kS5vJD2X1fTRH0d.jpg');">
+            <div class="card-overlay"></div>
+            <div class="card-body">
+              <i class="fas fa-tv fa-3x mb-3 text-primary"></i>
+              <h3>Stream Anywhere</h3>
+              <p>Watch on any device, anytime, with seamless quality.</p>
+            </div>
           </div>
         </div>
         <div class="col">
-          <div class="feature-card text-center">
-            <i class="fas fa-film fa-3x mb-3 text-success"></i>
-            <h3>Vast Library</h3>
-            <p>Thousands of titles across all genres.</p>
+          <div class="feature-card tilt" data-tilt style="background-image: url('https://image.tmdb.org/t/p/w500/8Vt6m1yJCq5oR3o5D2D2M3Nl61.jpg');">
+            <div class="card-overlay"></div>
+            <div class="card-body">
+              <i class="fas fa-film fa-3x mb-3 text-success"></i>
+              <h3>Vast Library</h3>
+              <p>Thousands of titles across all genres.</p>
+            </div>
           </div>
         </div>
         <div class="col">
-          <div class="feature-card text-center">
-            <i class="fas fa-star fa-3x mb-3 text-warning"></i>
-            <h3>Curated Content</h3>
-            <p>Handpicked movies with the highest ratings.</p>
+          <div class="feature-card tilt" data-tilt style="background-image: url('https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvift6kCfBn.jpg');">
+            <div class="card-overlay"></div>
+            <div class="card-body">
+              <i class="fas fa-star fa-3x mb-3 text-warning"></i>
+              <h3>Curated Content</h3>
+              <p>Handpicked movies with the highest ratings.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -222,7 +234,8 @@
       <h2 class="section-title text-center mb-5">What Our Users Say</h2>
       <div class="row row-cols-1 row-cols-md-3 g-4">
         <div class="col">
-          <div class="card testimonial-card">
+          <div class="card testimonial-card tilt" data-tilt style="background-image: url('https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60');">
+            <div class="card-overlay"></div>
             <div class="card-body">
               <p class="card-text">"CineStream has the best movie selection I've ever seen!"</p>
               <h5 class="card-title">Sarah M.</h5>
@@ -231,7 +244,8 @@
           </div>
         </div>
         <div class="col">
-          <div class="card testimonial-card">
+          <div class="card testimonial-card tilt" data-tilt style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60');">
+            <div class="card-overlay"></div>
             <div class="card-body">
               <p class="card-text">"Amazing quality and easy to use interface."</p>
               <h5 class="card-title">John D.</h5>
@@ -240,7 +254,8 @@
           </div>
         </div>
         <div class="col">
-          <div class="card testimonial-card">
+          <div class="card testimonial-card tilt" data-tilt style="background-image: url('https://images.unsplash.com/photo-1517841903200-7a706ff3a04f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60');">
+            <div class="card-overlay"></div>
             <div class="card-body">
               <p class="card-text">"Love the trending section—always up to date!"</p>
               <h5 class="card-title">Emily R.</h5>
@@ -297,6 +312,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/ScrollTrigger.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
   <script src="js/lading-page.js"></script>
-  </body>
+</body>
 </html>
