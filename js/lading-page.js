@@ -65,17 +65,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  gsap.from('.category-card, .feature-card, .testimonial-card', {
-    scrollTrigger: {
-      trigger: '.categories, .features, .testimonials',
-      start: 'top 80%',
-      toggleActions: 'play none none none'
-    },
-    opacity: 0,
-    y: 50,
-    stagger: 0.3,
-    duration: 1,
-    ease: 'power4.out'
+  // Categories, Features, Testimonials Animations
+  gsap.utils.toArray('.category-card, .feature-card, .testimonial-card').forEach(card => {
+    gsap.from(card, {
+      scrollTrigger: {
+        trigger: card,
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      },
+      opacity: 0,
+      y: 50,
+      duration: 1,
+      ease: 'power4.out'
+    });
   });
 
   gsap.from('.trending-item', {
@@ -93,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gsap.from('.gallery-item', {
     scrollTrigger: {
-      trigger: '.gallery-grid',
+      trigger: '.gallery-carousel',
       start: 'top 80%',
       toggleActions: 'play none none none'
     },
@@ -116,6 +118,27 @@ document.addEventListener('DOMContentLoaded', () => {
       600: { items: 2 },
       1000: { items: 3 }
     }
+  });
+
+  $('.gallery-carousel').owlCarousel({
+    items: 3,
+    loop: true,
+    margin: 20,
+    nav: true,
+    dots: false,
+    responsive: {
+      0: { items: 1 },
+      600: { items: 2 },
+      1000: { items: 3 }
+    }
+  });
+
+  // Initialize Tilt.js
+  VanillaTilt.init(document.querySelectorAll('.tilt'), {
+    max: 15,
+    speed: 400,
+    glare: true,
+    'max-glare': 0.3
   });
 
   // Back to Top Button
