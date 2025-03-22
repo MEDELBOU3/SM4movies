@@ -238,7 +238,7 @@ function updateHeroContent(item) {
 
     // Update buttons with consistent sizing
     heroButtons.innerHTML = `
-      <a href="movie.html" class="hero-btn btn-primary">
+      <a href="CineStream.html" class="hero-btn btn-primary">
         Start Streaming ${item.type === 'movie' ? 'Movie' : 'Show'}
       </a>
       <a href="movies.html?mediaType=${item.type}&id=${item.id}" class="hero-btn btn-secondary">
